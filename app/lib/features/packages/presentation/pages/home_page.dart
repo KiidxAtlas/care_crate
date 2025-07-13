@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -10,18 +11,15 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  late ScrollController _scrollController;
   int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -53,113 +51,108 @@ class _HomePageState extends ConsumerState<HomePage> {
           ],
         ),
       ),
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // Hero Package Section
-          SliverToBoxAdapter(
-            child: CarouselSlider(
-              options: CarouselOptions(
-                height: 320,
-                viewportFraction: 0.85,
-                enlargeCenterPage: true,
-                onPageChanged: (index, reason) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
-              ),
-              items: [
-                _buildPackageCard('Self Care Package', 'Wellness & Relaxation'),
-                _buildPackageCard(
-                  'Get Well Soon Package',
-                  'Recovery & Comfort',
+      body: RepaintBoundary(
+        child: ScrollablePositionedList.builder(
+          itemCount: 1,
+          physics: const BouncingScrollPhysics(),
+          itemBuilder: (context, index) => Column(
+            children: [
+              // Hero Package Section
+              CarouselSlider(
+                options: CarouselOptions(
+                  height: 320,
+                  viewportFraction: 0.85,
+                  enlargeCenterPage: true,
+                  enableInfiniteScroll: true,
+                  autoPlay: false,
+                  scrollPhysics: const BouncingScrollPhysics(),
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _currentPage = index;
+                    });
+                  },
                 ),
-                _buildPackageCard('Birthday Package', 'Celebration & Joy'),
-              ],
-            ),
-          ),
+                items: [
+                  _buildPackageCard(
+                    'Self Care Package',
+                    'Wellness & Relaxation',
+                  ),
+                  _buildPackageCard(
+                    'Get Well Soon Package',
+                    'Recovery & Comfort',
+                  ),
+                  _buildPackageCard('Birthday Package', 'Celebration & Joy'),
+                ],
+              ),
 
-          // Page Indicators
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  3,
-                  (index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _currentPage == index ? Colors.teal : Colors.grey,
+              // Page Indicators
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    3,
+                    (index) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentPage == index
+                            ? Colors.teal
+                            : Colors.grey,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
 
-          // Navigation Buttons
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // The CarouselSlider handles its own navigation
-                ],
-              ),
-            ),
-          ),
-
-          // Products Section Header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Featured Products',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+              // Products Section Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Featured Products',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Curated items for your care packages',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 16),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Curated items for your care packages',
+                      style: TextStyle(color: Colors.grey[400], fontSize: 16),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
 
-          // Compact Product Grid
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.8,
+              // Compact Product Grid
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.8,
+                  ),
+                  itemCount: 8,
+                  itemBuilder: (context, index) =>
+                      RepaintBoundary(child: _buildProductCard(index)),
+                ),
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildProductCard(index),
-                childCount: 8,
-              ),
-            ),
-          ),
 
-          // Bottom spacing
-          const SliverToBoxAdapter(child: SizedBox(height: 40)),
-        ],
+              // Bottom spacing
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -313,11 +306,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     final product = products[index % products.length];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        border: Border.all(color: Colors.grey[700]!, width: 1),
+    return Card(
+      elevation: 0,
+      color: Colors.grey[900],
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Colors.grey[700]!, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,6 +363,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       textStyle: const TextStyle(fontSize: 12),
+                      elevation: 0,
                     ),
                     child: const Text('Add to Cart'),
                   ),
